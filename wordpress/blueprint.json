@@ -17,7 +17,7 @@
 			"step": "installPlugin",
 			"pluginData": {
 				"resource": "git:directory",
-				"url": "https://github.com/YOUR-GITHUB-USER/YOUR-REPO.git",
+				"url": "https://github.com/asadaries-tech/ropstam-cms-task.git",
 				"ref": "main",
 				"path": "wordpress/service-addon-calculator"
 			},

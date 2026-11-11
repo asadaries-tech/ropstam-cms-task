@@ -69,7 +69,7 @@ wordpress/
 
 ```bash
 cd wp-content/plugins
-git clone https://github.com/YOUR-GITHUB-USER/YOUR-REPO.git ropstam-task
+git clone https://github.com/asadaries-tech/ropstam-cms-task.git ropstam-task
 ln -s ropstam-task/wordpress/service-addon-calculator service-addon-calculator
 wp plugin activate service-addon-calculator
 ```
@@ -91,10 +91,10 @@ wp post create --post_type=page --post_status=publish --post_title='Our Services
 
 ### Live demo (WordPress Playground)
 
-`wordpress/blueprint.json` installs the plugin straight from this repo, creates 4 sample services (one without a price) and opens the demo page. After pushing, replace `YOUR-GITHUB-USER/YOUR-REPO` in that file and use:
+`wordpress/blueprint.json` installs the plugin straight from this repo, creates 4 sample services (one without a price) and opens the demo page. After pushing, replace `asadaries-tech/ropstam-cms-task` in that file and use:
 
 ```
-https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/YOUR-GITHUB-USER/YOUR-REPO/main/wordpress/blueprint.json
+https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/asadaries-tech/ropstam-cms-task/main/wordpress/blueprint.json
 ```
 
 Each visitor gets a fresh, disposable site. For a persistent demo, upload the zip to a free InstaWP or TasteWP site.
