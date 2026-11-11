@@ -1,5 +1,4 @@
 === Service Add-on Calculator ===
-Contributors: (your wp.org username)
 Tags: services, pricing, calculator, block
 Requires at least: 6.3
 Tested up to: 6.8

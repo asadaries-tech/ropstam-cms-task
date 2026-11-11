@@ -10,7 +10,7 @@ This repository contains both parts of the task:
 **Demo links**
 
 - WordPress: https://digitnity.com/services/
-- Shopify: `https://YOUR-STORE.myshopify.com` (storefront password: `YOUR-PASSWORD`)
+- Shopify: https://ropstam-zpotsimr.myshopify.com/ (storefront password: `bayqua`)
 
 ---
 
