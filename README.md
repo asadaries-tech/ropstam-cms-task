@@ -5,12 +5,12 @@ This repository contains both parts of the task:
 | Part | Folder | Status |
 | --- | --- | --- |
 | WordPress: Dynamic Custom Product Add-on Block | [`wordpress/`](wordpress/) | Complete |
-| Shopify: Custom Bundle Builder Section | [`shopify/`](shopify/) | In progress |
+| Shopify: Custom Bundle Builder Section | [`shopify/`](shopify/) | Complete |
 
 **Demo links**
 
-- WordPress: `<add your Playground / InstaWP link here>`
-- Shopify: `<add your dev store link + storefront password here>`
+- WordPress: https://digitnity.com/services/
+- Shopify: `https://YOUR-STORE.myshopify.com` (storefront password: `YOUR-PASSWORD`)
 
 ---
 
@@ -186,4 +186,106 @@ add_filter( 'sacalc_post_type_args', function ( $args ) {
 
 ## Shopify – Bundle Builder Section
 
-See [`shopify/`](shopify/) (to be added).
+An Online Store 2.0 section that works in any 2.0 theme (Dawn, Horizon, etc.) and has no dependencies. Customers choose **one product from each of up to 3 groups**, see the bundle price update live, and add all items to the cart in **one `/cart/add.js` request**.
+
+### Requirement coverage
+
+| Brief | Implementation |
+| --- | --- |
+| a. `bundle-builder.liquid` with schema letting merchants pick up to 3 collections or product lists | `sections/bundle-builder.liquid`: `"max_blocks": 3`. Each **Product group** block has a `collection` setting and a `product_list` setting (the product list wins if both are set), plus a group title and how many products to show. |
+| b. Customers pick 1 item per group to build a 3-pack | Each group is a `<fieldset>` of native radio buttons (`snippets/bundle-builder-card.liquid`). Products with variants get a variant `<select>`. |
+| c. Live bundle price; add all 3 to cart via Ajax with line item properties linking them | `assets/bundle-builder.js`: the total is recalculated on every change. One `POST /cart/add.js` sends `{ items: [...] }` with `quantity: 1` per item, and every line gets `properties: { Bundle: "<name>", _bundle_id: "<uuid>" }`. The underscore keeps `_bundle_id` hidden from customers at checkout. |
+| d. Stock/sold-out validation and loading states without reload; clean Liquid and vanilla JS | Sold-out products and variants are disabled and labelled. A group that is entirely sold out blocks the bundle with a message. The button shows a spinner, `aria-busy` and "Adding…", and double submits are ignored. Shopify errors (e.g. 422 "not enough stock"), network failures and timeouts (15s) all show a message. There are no libraries: a single custom element, about 12 KB unminified. |
+
+### Files
+
+```
+shopify/
+├── sections/bundle-builder.liquid       # Markup + schema (settings, blocks, presets)
+├── snippets/bundle-builder-card.liquid  # One selectable product (radio + variant select)
+└── assets/
+    ├── bundle-builder.js                # <bundle-builder> custom element
+    └── bundle-builder.css               # Scoped, mobile-first styles
+```
+
+### Setup
+
+**Requirements:** a Shopify dev store, [Shopify CLI](https://shopify.dev/docs/api/shopify-cli) (Node.js 22.12+) and Git.
+
+```bash
+# 1. Install the CLI
+npm install -g @shopify/cli@latest
+
+# 2. Pull your dev store's current theme into a folder
+mkdir my-theme && cd my-theme
+shopify theme pull --store YOUR-STORE.myshopify.com
+
+# 3. Copy the 4 files in (keep the folder structure)
+cp -r ../ropstam-task/shopify/sections ../ropstam-task/shopify/snippets ../ropstam-task/shopify/assets .
+
+# 4. Preview locally (hot reload)
+shopify theme dev --store YOUR-STORE.myshopify.com
+
+# 5. Upload as a new theme, then publish it from Online Store > Themes
+shopify theme push --unpublished --store YOUR-STORE.myshopify.com
+```
+
+**Add the section:** go to **Online Store → Themes → Customize** and open a template (e.g. the home page). Click **Add section → Bundle builder**, then in each of the 3 **Product group** blocks choose a collection or pick products. Save.
+
+**Recommended test data:** 3 collections, at least one product with variants, one product with inventory set to 0 (to show "Sold out"), and one sold-out variant.
+
+### Implementation notes
+
+**Platform standards**
+
+- Uses the section schema features you'd expect: `max_blocks`, typed settings (`collection`, `product_list`, `color_scheme`, `range`), `presets` so it appears under **Add section**, and `disabled_on` header/footer groups.
+- `{{ block.shopify_attributes }}` is on each group, so clicking a group in the theme editor selects its block.
+- Uses the standard Liquid filters: `money`, `image_url` + `image_tag` (responsive `widths`/`sizes`, lazy loading), `asset_url`, `stylesheet_tag`, `escape`, `placeholder_svg_tag`, and `routes.cart_add_url` / `routes.cart_url` (so it works on translated store paths).
+- Prices are formatted in JS with the shop's own `shop.money_format`, so live totals match Liquid's `money` output.
+- Shopify **Theme Check** passes with 0 offenses.
+
+**Performance**
+
+- The JS is `defer`red, with no dependencies and one delegated `change` listener and one `submit` listener per section.
+- DOM writes only touch text that changed, plus a couple of attributes. There's no re-rendering of cards.
+- It's a custom element, so it sets itself up (and cleans up) when the theme editor re-renders the section, without needing `shopify:section:load` handlers.
+
+**Edge cases**
+
+- Sold-out products are disabled with a "Sold out" badge. Sold-out variants are disabled options. If a whole group is sold out, the customer is told why the bundle can't be completed.
+- Submitting before all groups are chosen shows a message and moves focus to the first group that's missing a choice.
+- 422 responses show Shopify's own message (e.g. "You can only add 2 of this item to the cart"). Network errors and timeouts show a friendly fallback, and the button always recovers.
+- Groups with no collection or products are skipped on the storefront and flagged in the theme editor.
+- Product titles are escaped, the layout is mobile first (2-column cards, with a sticky summary on desktop), and there's no horizontal scroll at 375px.
+
+**Accessibility**
+
+- Native radios inside a `<fieldset>`/`<legend>` give arrow-key navigation and announced checked state for free. Variant `<select>`s have labels.
+- The total is an `<output aria-live="polite">`, the status line is `aria-live`, errors use `role="alert"` and success uses `role="status"`.
+- The button uses `aria-disabled` rather than `disabled`, so it stays focusable and explains what's missing. It has `aria-busy` while adding.
+- Visible focus rings, a non-colour ✓ for the selected card (aria-hidden, so it isn't read as part of the name), and support for `prefers-reduced-motion` and `forced-colors`.
+
+**After adding to cart**
+
+The request also asks the Section Rendering API for `cart-icon-bubble`, so the cart count updates in Dawn-style themes. It also fires Dawn's `cartUpdate` pub/sub event when that exists, and always dispatches a `bundle-builder:added` DOM event (with `bundleId` and `items`) for other themes to hook into. A "View cart" link appears after a successful add.
+
+### Testing done
+
+- **Theme Check** (`@shopify/theme-check-node`): 0 offenses.
+- The section was rendered with mock products through LiquidJS and tested in Chrome with a mocked `/cart/add.js`:
+  - live totals, including variant price changes
+  - sold-out products, variants and whole groups
+  - keyboard selection (Space, arrow keys)
+  - validation with focus moved to the missing group
+  - one request carrying all 3 items with a shared `_bundle_id`
+  - loading state and double-click protection
+  - 422 and network-failure messages
+  - cart bubble refresh
+  - no horizontal scroll at 375px
+
+### Assumptions & limitations
+
+- **Bundle price = sum of the selected variants' prices.** No discount is applied. A real bundle discount needs an automatic discount or a Shopify Function, which is outside this section's scope.
+- The items stay as 3 separate cart lines linked by `_bundle_id`. Removing one line doesn't remove the others.
+- Quantity is 1 per item. Collections show their first 2–12 products (merchant setting), with no pagination.
+- UI text is English. Merchant-facing text (heading, description, button, bundle name) is editable in the theme editor. The remaining short labels are in the Liquid/JS rather than locale files, so the section can be dropped into any theme without editing `locales/*.json`.
