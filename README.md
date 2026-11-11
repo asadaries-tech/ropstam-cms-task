@@ -91,7 +91,7 @@ wp post create --post_type=page --post_status=publish --post_title='Our Services
 
 ### Live demo (WordPress Playground)
 
-`wordpress/blueprint.json` installs the plugin straight from this repo, creates 4 sample services (one without a price) and opens the demo page. After pushing, replace `asadaries-tech/ropstam-cms-task` in that file and use:
+`wordpress/blueprint.json` installs the plugin straight from this repo, creates 4 sample services (one without a price) and opens the demo page.    Open this link for a disposable demo site:
 
 ```
 https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/asadaries-tech/ropstam-cms-task/main/wordpress/blueprint.json
