@@ -134,7 +134,7 @@ class SACALC_Renderer {
 								<button type="button" class="sacalc-addon" aria-pressed="false"
 									data-sacalc-addon="<?php echo esc_attr( $addon['id'] ); ?>"
 									data-sacalc-price="<?php echo esc_attr( self::to_cents( $addon['price'] ) ); ?>">
-									<span class="sacalc-addon__label"><?php echo esc_html( $addon['label'] ); ?></span>
+									<span class="sacalc-addon__label"><span class="sacalc-addon__check" aria-hidden="true">✓</span><?php echo esc_html( $addon['label'] ); ?></span>
 									<span class="sacalc-addon__price">+<?php echo esc_html( self::format_money( $addon['price'] ) ); ?></span>
 								</button>
 							</li>

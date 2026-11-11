@@ -113,9 +113,15 @@
 	border-color: var(--sacalc-accent);
 }
 
-/* A non-colour cue for the pressed state (WCAG 1.4.1). */
-:where(.sacalc-addon[aria-pressed="true"] .sacalc-addon__label)::before {
-	content: "✓ ";
+/* A non-colour cue for the pressed state (WCAG 1.4.1). The mark is aria-hidden, so the
+   button's accessible name stays the same; aria-pressed announces the state. */
+:where(.sacalc-addon__check) {
+	display: none;
+	margin-inline-end: 0.25em;
+}
+
+:where(.sacalc-addon[aria-pressed="true"] .sacalc-addon__check) {
+	display: inline;
 }
 
 :where(.sacalc-addon:focus-visible) {
