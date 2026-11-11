@@ -218,16 +218,16 @@ npm install -g @shopify/cli@latest
 
 # 2. Pull your dev store's current theme into a folder
 mkdir my-theme && cd my-theme
-shopify theme pull --store YOUR-STORE.myshopify.com
+shopify theme pull --store your-store.myshopify.com
 
 # 3. Copy the 4 files in (keep the folder structure)
 cp -r ../ropstam-task/shopify/sections ../ropstam-task/shopify/snippets ../ropstam-task/shopify/assets .
 
 # 4. Preview locally (hot reload)
-shopify theme dev --store YOUR-STORE.myshopify.com
+shopify theme dev --store your-store.myshopify.com
 
 # 5. Upload as a new theme, then publish it from Online Store > Themes
-shopify theme push --unpublished --store YOUR-STORE.myshopify.com
+shopify theme push --unpublished --store your-store.myshopify.com
 ```
 
 **Add the section:** go to **Online Store → Themes → Customize** and open a template (e.g. the home page). Click **Add section → Bundle builder**, then in each of the 3 **Product group** blocks choose a collection or pick products. Save.
