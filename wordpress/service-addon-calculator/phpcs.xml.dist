@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ruleset name="Service Add-on Calculator">
+	<description>WordPress Coding Standards for the plugin.</description>
+	<file>.</file>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<arg name="extensions" value="php"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress"/>
+
+	<config name="minimum_wp_version" value="6.3"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="service-addon-calculator"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="sacalc"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>
