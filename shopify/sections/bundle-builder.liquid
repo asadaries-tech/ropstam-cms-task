@@ -1,0 +1,321 @@
+{%- comment -%}
+  Bundle Builder: "Build your 3-pack".
+
+  Merchants add up to 3 "Product group" blocks. Each block is fed by a collection
+  or a hand-picked product list. Customers choose 1 product (and variant) per
+  group, see the bundle price update live, and add all items to the cart in a
+  single /cart/add.js request. Every line shares a `_bundle_id` property.
+
+  Assets: assets/bundle-builder.css, assets/bundle-builder.js
+  Snippet: snippets/bundle-builder-card.liquid
+{%- endcomment -%}
+
+{{ 'bundle-builder.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bundle-builder.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign heading_id = 'BundleBuilder-heading-' | append: section.id
+  assign status_id = 'BundleBuilder-status-' | append: section.id
+  assign usable_groups = 0
+
+  for block in section.blocks
+    if block.settings.product_list != blank or block.settings.collection.products_count > 0
+      assign usable_groups = usable_groups | plus: 1
+    endif
+  endfor
+-%}
+
+<style>
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+</style>
+
+<div class="color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    <bundle-builder
+      class="bundle-builder"
+      data-money-format="{{ shop.money_format | strip_html | escape }}"
+      data-cart-add-url="{{ routes.cart_add_url }}"
+      data-bundle-name="{{ section.settings.bundle_name | default: section.settings.heading | escape }}"
+      data-label-loading="Adding…"
+      data-label-network-error="We couldn't reach the store. Check your connection and try again."
+      data-label-timeout="The request took too long. Please try again."
+      data-label-generic-error="Sorry, the bundle couldn't be added. Please try again."
+    >
+      <section class="bundle-builder__inner" aria-labelledby="{{ heading_id }}">
+        <div class="bundle-builder__header">
+          <h2 class="bundle-builder__heading" id="{{ heading_id }}">{{ section.settings.heading | escape }}</h2>
+          {%- if section.settings.description != blank -%}
+            <div class="bundle-builder__description rte">{{ section.settings.description }}</div>
+          {%- endif -%}
+        </div>
+
+        {%- if usable_groups == 0 -%}
+          {%- if request.design_mode -%}
+            <p class="bundle-builder__notice">
+              Add up to 3 "Product group" blocks and choose a collection or products for each.
+            </p>
+          {%- endif -%}
+        {%- else -%}
+          <noscript>
+            <p class="bundle-builder__notice">Please enable JavaScript to build a bundle.</p>
+          </noscript>
+
+          <form class="bundle-builder__form" data-bundle-form novalidate>
+            <div class="bundle-builder__groups">
+              {%- assign step = 0 -%}
+              {%- for block in section.blocks -%}
+                {%- liquid
+                  assign group_products = nil
+                  if block.settings.product_list != blank
+                    assign group_products = block.settings.product_list
+                    assign group_limit = 12
+                  elsif block.settings.collection.products_count > 0
+                    assign group_products = block.settings.collection.products
+                    assign group_limit = block.settings.products_to_show
+                  endif
+                -%}
+
+                {%- if group_products == nil -%}
+                  {%- if request.design_mode -%}
+                    <p class="bundle-builder__notice" {{ block.shopify_attributes }}>
+                      This group has no products yet. Choose a collection or products.
+                    </p>
+                  {%- endif -%}
+                  {%- continue -%}
+                {%- endif -%}
+
+                {%- liquid
+                  assign step = step | plus: 1
+                  assign group_title = block.settings.title | default: 'Choose an item'
+                  assign input_name = 'bundle-' | append: section.id | append: '-' | append: block.id
+                  assign available_count = 0
+                  for product in group_products limit: group_limit
+                    if product.available
+                      assign available_count = available_count | plus: 1
+                    endif
+                  endfor
+                -%}
+
+                <fieldset
+                  class="bundle-builder__group"
+                  data-bundle-group
+                  data-group-title="{{ group_title | escape }}"
+                  {% if available_count == 0 %}
+                    data-bundle-unavailable
+                  {% endif %}
+                  {{ block.shopify_attributes }}
+                >
+                  <legend class="bundle-builder__legend">
+                    <span class="bundle-builder__step" aria-hidden="true">{{ step }}</span>
+                    <span class="bundle-builder__sr-only">Step {{ step }}:</span>
+                    {{ group_title | escape }}
+                  </legend>
+
+                  {%- if available_count == 0 -%}
+                    <p class="bundle-builder__notice bundle-builder__notice--warning">
+                      Everything in this group is sold out right now.
+                    </p>
+                  {%- endif -%}
+
+                  <ul class="bundle-builder__grid" role="list">
+                    {%- for product in group_products limit: group_limit -%}
+                      {%- assign input_id = 'bundle-' | append: block.id | append: '-' | append: product.id -%}
+                      {%- render 'bundle-builder-card', product: product, input_name: input_name, input_id: input_id -%}
+                    {%- endfor -%}
+                  </ul>
+                </fieldset>
+              {%- endfor -%}
+            </div>
+
+            <div class="bundle-builder__summary" aria-labelledby="{{ heading_id }}-summary">
+              <h3 class="bundle-builder__summary-heading" id="{{ heading_id }}-summary">Your bundle</h3>
+
+              <ol class="bundle-builder__picks" role="list">
+                {%- for block in section.blocks -%}
+                  {%- if block.settings.product_list != blank or block.settings.collection.products_count > 0 -%}
+                    <li class="bundle-builder__pick">
+                      <span class="bundle-builder__pick-group">{{ block.settings.title | default: 'Choose an item' | escape }}</span>
+                      <span class="bundle-builder__pick-value" data-bundle-pick>Not selected</span>
+                    </li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ol>
+
+              <p class="bundle-builder__total">
+                <span id="{{ heading_id }}-total-label">Bundle price</span>
+                <output
+                  class="bundle-builder__total-value"
+                  data-bundle-total
+                  aria-labelledby="{{ heading_id }}-total-label"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {{- 0 | money -}}
+                </output>
+              </p>
+
+              <p class="bundle-builder__status" id="{{ status_id }}" data-bundle-status aria-live="polite"></p>
+
+              <button
+                type="submit"
+                class="bundle-builder__button button"
+                data-bundle-submit
+                aria-disabled="true"
+                aria-describedby="{{ status_id }}"
+              >
+                <span class="bundle-builder__spinner" aria-hidden="true"></span>
+                <span class="bundle-builder__button-label" data-bundle-button-label>
+                  {{- section.settings.button_label | escape -}}
+                </span>
+              </button>
+
+              <div class="bundle-builder__message bundle-builder__message--error" role="alert" data-bundle-error></div>
+              <div class="bundle-builder__message bundle-builder__message--success" role="status" data-bundle-success>
+                <span data-bundle-success-text></span>
+                <a href="{{ routes.cart_url }}" class="bundle-builder__cart-link" data-bundle-cart-link hidden>View cart</a>
+              </div>
+            </div>
+          </form>
+        {%- endif -%}
+      </section>
+    </bundle-builder>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Bundle builder",
+  "tag": "section",
+  "class": "section-bundle-builder",
+  "max_blocks": 3,
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Build your 3-pack"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Pick one item from each group to complete your bundle.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Add bundle to cart"
+    },
+    {
+      "type": "text",
+      "id": "bundle_name",
+      "label": "Bundle name in cart",
+      "default": "3-pack bundle",
+      "info": "Shown to customers as the \"Bundle\" property on each item in the cart."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "group",
+      "name": "Product group",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Group title",
+          "default": "Choose an item"
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "range",
+          "id": "products_to_show",
+          "min": 2,
+          "max": 12,
+          "step": 1,
+          "label": "Products to show from collection",
+          "default": 6
+        },
+        {
+          "type": "product_list",
+          "id": "product_list",
+          "label": "Or pick specific products",
+          "limit": 12,
+          "info": "If products are picked here, they are used instead of the collection."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bundle builder",
+      "blocks": [
+        {
+          "type": "group",
+          "settings": {
+            "title": "Choose your first item"
+          }
+        },
+        {
+          "type": "group",
+          "settings": {
+            "title": "Choose your second item"
+          }
+        },
+        {
+          "type": "group",
+          "settings": {
+            "title": "Choose your third item"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

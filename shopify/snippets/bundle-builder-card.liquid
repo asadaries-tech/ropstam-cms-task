@@ -1,0 +1,95 @@
+{%- comment -%}
+  One selectable product in a bundle group.
+
+  Accepts:
+  - product {Product}: the product to render
+  - input_name {String}: shared radio name for the group
+  - input_id {String}: unique id for this product's radio
+
+  A native radio gives arrow-key navigation within the group and a checked
+  state that assistive tech announces, with no extra ARIA needed. Prices
+  travel as integer cents in data attributes for bundle-builder.js.
+{%- endcomment -%}
+
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign sold_out = true
+  if product.available
+    assign sold_out = false
+  endif
+-%}
+
+<li class="bundle-card{% if sold_out %} bundle-card--sold-out{% endif %}" data-bundle-card>
+  <input
+    type="radio"
+    class="bundle-card__input"
+    id="{{ input_id }}"
+    name="{{ input_name }}"
+    value="{{ product.id }}"
+    data-bundle-option
+    data-variant-id="{{ variant.id }}"
+    data-price="{{ variant.price }}"
+    data-title="{{ product.title | escape }}"
+    {% if sold_out %}
+      disabled
+      aria-describedby="{{ input_id }}-status"
+    {% endif %}
+  >
+  <label class="bundle-card__label" for="{{ input_id }}">
+    <span class="bundle-card__media">
+      {%- if product.featured_image -%}
+        {{
+          product.featured_image
+          | image_url: width: 600
+          | image_tag:
+            loading: 'lazy',
+            widths: '200, 300, 400, 600',
+            sizes: '(min-width: 990px) 220px, (min-width: 750px) 30vw, 45vw',
+            alt: '',
+            class: 'bundle-card__image'
+        }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'bundle-card__image bundle-card__placeholder' }}
+      {%- endif -%}
+    </span>
+    <span class="bundle-card__title"><span class="bundle-card__check" aria-hidden="true">✓</span>{{ product.title | escape }}</span>
+    <span class="bundle-card__price">
+      <span data-card-price>{{ variant.price | money }}</span>
+      {%- if variant.compare_at_price > variant.price -%}
+        <s class="bundle-card__compare">
+          <span class="bundle-builder__sr-only">Regular price</span>
+          {{- variant.compare_at_price | money -}}
+        </s>
+      {%- endif -%}
+    </span>
+    {%- if sold_out -%}
+      <span class="bundle-card__badge" id="{{ input_id }}-status">Sold out</span>
+    {%- endif -%}
+  </label>
+
+  {%- unless product.has_only_default_variant or sold_out -%}
+    <div class="bundle-card__variant">
+      <label class="bundle-builder__sr-only" for="{{ input_id }}-variant">
+        {{- product.title | escape }} options
+      </label>
+      <select id="{{ input_id }}-variant" class="bundle-card__select" data-bundle-variant>
+        {%- for option_variant in product.variants -%}
+          <option
+            value="{{ option_variant.id }}"
+            data-price="{{ option_variant.price }}"
+            data-variant-title="{{ option_variant.title | escape }}"
+            {% if option_variant.id == variant.id %}
+              selected
+            {% endif %}
+            {% unless option_variant.available %}
+              disabled
+            {% endunless %}
+          >
+            {{- option_variant.title | escape }}
+            {%- unless option_variant.available %} (sold out){% endunless -%}
+          </option>
+        {%- endfor -%}
+      </select>
+    </div>
+  {%- endunless -%}
+</li>
