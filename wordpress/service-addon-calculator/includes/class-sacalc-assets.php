@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
 class SACALC_Assets {
 
 	const EDITOR_SCRIPT = 'sacalc-editor';
+	const VIEW_SCRIPT   = 'sacalc-view';
 	const STYLE         = 'sacalc-style';
 
 	/**
@@ -39,6 +40,18 @@ class SACALC_Assets {
 			SACALC_VERSION
 		);
 
+		// Front end: vanilla JS with no dependencies, deferred and in the footer.
+		wp_register_script(
+			self::VIEW_SCRIPT,
+			SACALC_PLUGIN_URL . 'assets/js/view.js',
+			array(),
+			SACALC_VERSION,
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+
 		// Editor: uses only packages core already ships, so there is no build step.
 		wp_register_script(
 			self::EDITOR_SCRIPT,
@@ -55,6 +68,7 @@ class SACALC_Assets {
 	 */
 	public static function enqueue_frontend() {
 		wp_enqueue_style( self::STYLE );
+		wp_enqueue_script( self::VIEW_SCRIPT );
 	}
 
 	/**
