@@ -1,0 +1,53 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"landingPage": "/our-services/",
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": false
+	},
+	"steps": [
+		{
+			"step": "login",
+			"username": "admin"
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/YOUR-GITHUB-USER/YOUR-REPO.git",
+				"ref": "main",
+				"path": "wordpress/service-addon-calculator"
+			},
+			"options": {
+				"activate": true
+			}
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp rewrite structure /%postname%/"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp post create --post_type=sacalc_service --post_status=publish --post_title='Logo Design' --post_excerpt='Custom logo with three initial concepts.' --meta_input='{\"base_price\":149,\"delivery_time_days\":5}'"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp post create --post_type=sacalc_service --post_status=publish --post_title='Landing Page' --post_excerpt='Responsive one-page website built on your brand.' --meta_input='{\"base_price\":1299,\"delivery_time_days\":10}'"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp post create --post_type=sacalc_service --post_status=publish --post_title='SEO Audit' --post_excerpt='Technical SEO audit with a prioritised fix list.' --meta_input='{\"base_price\":399,\"delivery_time_days\":7}'"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp post create --post_type=sacalc_service --post_status=publish --post_title='Brand Strategy' --post_excerpt='Positioning workshop — quoted per project.'"
+		},
+		{
+			"step": "wp-cli",
+			"command": "wp post create --post_type=page --post_status=publish --post_title='Our Services' --post_name=our-services --post_content='<!-- wp:sacalc/latest-services {\"align\":\"wide\"} /-->'"
+		}
+	]
+}
