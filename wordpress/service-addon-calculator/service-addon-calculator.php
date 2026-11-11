@@ -23,6 +23,7 @@ define( 'SACALC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-post-type.php';
 require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-meta-box.php';
+require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-addons.php';
 
 /**
  * Boot the plugin. Each class only attaches its own hooks.
