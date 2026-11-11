@@ -24,6 +24,9 @@ define( 'SACALC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-post-type.php';
 require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-meta-box.php';
 require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-addons.php';
+require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-renderer.php';
+require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-assets.php';
+require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-block.php';
 
 /**
  * Boot the plugin. Each class only attaches its own hooks.
@@ -31,6 +34,8 @@ require_once SACALC_PLUGIN_DIR . 'includes/class-sacalc-addons.php';
 function sacalc_bootstrap() {
 	SACALC_Post_Type::init();
 	SACALC_Meta_Box::init();
+	SACALC_Assets::init();
+	SACALC_Block::init();
 }
 add_action( 'plugins_loaded', 'sacalc_bootstrap' );
 

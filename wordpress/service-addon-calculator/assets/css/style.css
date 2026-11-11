@@ -1,0 +1,170 @@
+/**
+ * Service Add-on Calculator: front end and editor preview.
+ *
+ * Selectors are wrapped in :where() so their specificity is 0 and any theme can
+ * override them. Colours inherit from the theme (currentColor) with custom
+ * properties as override hooks.
+ */
+
+:where(.sacalc-services) {
+	--sacalc-gap: 1.5rem;
+	--sacalc-radius: 8px;
+	--sacalc-border: rgba(128, 128, 128, 0.4); /* Neutral grey, readable on light and dark themes. */
+	--sacalc-accent: var(--wp--preset--color--primary, #1e40af);
+	--sacalc-accent-contrast: #fff;
+}
+
+/* Reset list styles; role="list" in the markup keeps list semantics in Safari. */
+:where(.sacalc-services__list, .sacalc-addons) {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+/* Mobile first: one column, more as space allows. */
+:where(.sacalc-services__list) {
+	display: grid;
+	gap: var(--sacalc-gap);
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+:where(.sacalc-service) {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.25rem;
+	border: 1px solid var(--sacalc-border);
+	border-radius: var(--sacalc-radius);
+}
+
+:where(.sacalc-service__title) {
+	margin: 0;
+	font-size: 1.25rem;
+	line-height: 1.3;
+}
+
+:where(.sacalc-service__excerpt) {
+	margin: 0;
+}
+
+:where(.sacalc-service__meta) {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.5rem;
+	margin: 0;
+}
+
+:where(.sacalc-service__meta dt) {
+	font-size: 0.8125rem;
+	opacity: 0.75;
+}
+
+:where(.sacalc-service__meta dd) {
+	margin: 0;
+	font-weight: 600;
+}
+
+:where(.sacalc-service__addons) {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	min-width: 0; /* Lets the fieldset shrink on narrow screens. */
+}
+
+:where(.sacalc-service__addons legend) {
+	padding: 0;
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+}
+
+:where(.sacalc-addons) {
+	display: grid;
+	gap: 0.5rem;
+}
+
+:where(.sacalc-addon) {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-height: 44px; /* WCAG 2.5.5 target size. */
+	padding: 0.5rem 0.75rem;
+	font: inherit;
+	text-align: start;
+	color: inherit;
+	background: transparent;
+	border: 1px solid var(--sacalc-border);
+	border-radius: calc(var(--sacalc-radius) - 2px);
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+:where(.sacalc-addon:hover) {
+	border-color: var(--sacalc-accent);
+}
+
+/* Visual state comes from the ARIA attribute, so it always matches what assistive tech announces. */
+:where(.sacalc-addon[aria-pressed="true"]) {
+	color: var(--sacalc-accent-contrast);
+	background: var(--sacalc-accent);
+	border-color: var(--sacalc-accent);
+}
+
+/* A non-colour cue for the pressed state (WCAG 1.4.1). */
+:where(.sacalc-addon[aria-pressed="true"] .sacalc-addon__label)::before {
+	content: "✓ ";
+}
+
+:where(.sacalc-addon:focus-visible) {
+	outline: 2px solid var(--sacalc-accent);
+	outline-offset: 2px;
+}
+
+:where(.sacalc-addon__price) {
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+:where(.sacalc-service__total) {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 0.5rem;
+	margin: auto 0 0; /* Keeps the total at the bottom of the card. */
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--sacalc-border);
+}
+
+:where(.sacalc-service__total-value) {
+	font-size: 1.375rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+:where(.sacalc-service__total--request) {
+	font-style: italic;
+}
+
+/* Editor preview: show the toggles (view.js doesn't run there) but make them inert. */
+:where(.editor-styles-wrapper .sacalc-service__addons[hidden]) {
+	display: block;
+}
+
+:where(.editor-styles-wrapper .sacalc-addon) {
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:where(.sacalc-addon) {
+		transition: none;
+	}
+}
+
+@media (forced-colors: active) {
+	:where(.sacalc-addon[aria-pressed="true"]) {
+		border-width: 3px;
+	}
+}

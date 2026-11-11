@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "sacalc/latest-services",
+	"version": "1.0.0",
+	"title": "Latest Services",
+	"category": "widgets",
+	"icon": "hammer",
+	"description": "Shows the 3 most recently updated services with a live add-on price calculator.",
+	"keywords": [ "services", "pricing", "calculator" ],
+	"textdomain": "service-addon-calculator",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"editorScript": "sacalc-editor",
+	"style": "sacalc-style",
+	"render": "file:./render.php"
+}
