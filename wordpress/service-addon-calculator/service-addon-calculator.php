@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Service Add-on Calculator
  * Description:       Registers a "Services" post type and a block that lists the 3 most recently updated services with a live add-on price calculator.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.3
  * Requires PHP:      7.4
  * Author:            Senior CMS Developer Candidate
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SACALC_VERSION', '1.0.0' );
+define( 'SACALC_VERSION', '1.0.1' );
 define( 'SACALC_PLUGIN_FILE', __FILE__ );
 define( 'SACALC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SACALC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -62,5 +62,6 @@ register_activation_hook( __FILE__, 'sacalc_activate' );
 function sacalc_deactivate() {
 	unregister_post_type( SACALC_Post_Type::POST_TYPE );
 	flush_rewrite_rules();
+	delete_option( 'sacalc_rewrite_version' );
 }
 register_deactivation_hook( __FILE__, 'sacalc_deactivate' );

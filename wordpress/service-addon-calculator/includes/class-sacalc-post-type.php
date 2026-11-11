@@ -34,6 +34,7 @@ class SACALC_Post_Type {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_post_type' ) );
 		add_action( 'init', array( __CLASS__, 'register_meta' ) );
+		add_action( 'init', array( __CLASS__, 'maybe_flush_rewrite_rules' ), 20 );
 		add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', array( __CLASS__, 'add_columns' ) );
 		add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', array( __CLASS__, 'render_column' ), 10, 2 );
 	}
@@ -56,19 +57,45 @@ class SACALC_Post_Type {
 			'not_found_in_trash' => __( 'No services found in Trash.', 'service-addon-calculator' ),
 		);
 
-		register_post_type(
-			self::POST_TYPE,
-			array(
-				'labels'       => $labels,
-				'public'       => true,
-				'has_archive'  => true,
-				'rewrite'      => array( 'slug' => 'services' ),
-				'menu_icon'    => 'dashicons-hammer',
-				'show_in_rest' => true,
-				// "custom-fields" is required for the meta to be exposed in the REST API.
-				'supports'     => array( 'title', 'editor', 'excerpt', 'revisions', 'custom-fields' ),
-			)
+		$args = array(
+			'labels'       => $labels,
+			'public'       => true,
+			// No archive: the block/shortcode is the listing. An archive at /services/
+			// would take over any page with the slug "services" (a common page name),
+			// making that page unreachable and breaking page builders' previews of it.
+			'has_archive'  => false,
+			// Singular base: single services live at /service/{slug}/. That rule only
+			// matches a sub-path, so it can't collide with a page called "service".
+			'rewrite'      => array(
+				'slug'       => 'service',
+				'with_front' => false,
+			),
+			'menu_icon'    => 'dashicons-hammer',
+			'show_in_rest' => true,
+			// "custom-fields" is required for the meta to be exposed in the REST API.
+			'supports'     => array( 'title', 'editor', 'excerpt', 'revisions', 'custom-fields' ),
 		);
+
+		/**
+		 * Filter the Services post type arguments, e.g. to enable an archive
+		 * on sites where /services/ is not used by a page.
+		 *
+		 * @param array $args register_post_type() arguments.
+		 */
+		register_post_type( self::POST_TYPE, apply_filters( 'sacalc_post_type_args', $args ) );
+	}
+
+	/**
+	 * Flush rewrite rules once after the plugin is updated (zip uploads don't
+	 * re-run the activation hook), so URL changes take effect without asking
+	 * the admin to re-save permalinks. Runs only when the stored version differs.
+	 */
+	public static function maybe_flush_rewrite_rules() {
+		if ( get_option( 'sacalc_rewrite_version' ) === SACALC_VERSION ) {
+			return;
+		}
+		flush_rewrite_rules( false );
+		update_option( 'sacalc_rewrite_version', SACALC_VERSION );
 	}
 
 	/**

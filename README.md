@@ -110,6 +110,12 @@ add_filter( 'sacalc_service_addons', function ( $addons ) {
 
 // Change the currency symbol.
 add_filter( 'sacalc_currency_symbol', fn() => '£' );
+
+// Enable an archive (only if no page uses the slug).
+add_filter( 'sacalc_post_type_args', function ( $args ) {
+	$args['has_archive'] = 'all-services';
+	return $args;
+} );
 ```
 
 ### Implementation notes
@@ -119,7 +125,8 @@ add_filter( 'sacalc_currency_symbol', fn() => '£' );
 - Each hook is attached in its class's `init()`. Post-type-specific hooks (`add_meta_boxes_{post_type}`, `save_post_{post_type}`, `manage_{post_type}_posts_columns`) keep the code off unrelated screens.
 - Everything uses the `sacalc` prefix (functions, classes, post type, hooks, handles, CSS classes). `sac` was too short for the WPCS PrefixAllGlobals sniff.
 - The block is registered from `block.json` (apiVersion 3) and is dynamic (`save` returns `null`), so the list stays current without re-saving pages.
-- Activation flushes rewrite rules once (after registering the CPT). Deactivation cleans them up.
+- Activation flushes rewrite rules once (after registering the CPT), and so does the first load after an update (a version check, because zip updates don't re-run the activation hook). Deactivation cleans them up.
+- Single services live at `/service/{slug}/`. There is deliberately no `/services/` archive, so the plugin can never take over a page called "Services" (see the edge cases below).
 
 **Security**
 
@@ -140,6 +147,7 @@ add_filter( 'sacalc_currency_symbol', fn() => '£' );
 - **No delivery time:** shows "To be confirmed".
 - **Invalid input:** negative prices are clamped to 0, days to at least 1, and non-numeric meta box input clears the field. The REST API rejects wrong types through the schema.
 - **No services:** a friendly empty-state message.
+- **URL collisions:** no post type archive, so a page with the slug `services` keeps working, including in Elementor's editor preview. (Found on a live Hostinger + Elementor site: the archive had taken over the page's URL.) Sites that want an archive can enable it with the `sacalc_post_type_args` filter.
 - **JavaScript disabled:** the add-on toggles stay hidden (they would do nothing) and the base price shows as the total.
 - **Several blocks on one page:** IDs come from `wp_unique_id()` and each block initializes independently.
 - **Locale formatting:** the JS uses the site's decimal and thousands separators, so live totals match PHP's `number_format_i18n()`.

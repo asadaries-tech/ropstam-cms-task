@@ -4,7 +4,7 @@ Tags: services, pricing, calculator, block
 Requires at least: 6.3
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ A "Services" post type plus a block that lists the 3 most recently updated servi
 3. Add services under Services > Add New, then insert the "Latest Services" block on any page.
 
 == Changelog ==
+
+= 1.0.1 =
+* Fix: the /services/ archive took over pages with the slug "services" and broke Elementor previews. The archive is now off and single services use /service/{slug}/.
 
 = 1.0.0 =
 * Initial release.
