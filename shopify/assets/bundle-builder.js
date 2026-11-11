@@ -8,6 +8,8 @@
  * - Prices are integer cents read from data attributes rendered by Liquid.
  * - One delegated `change` and one `submit` listener per section.
  * - DOM writes are limited to text that actually changed and a few attributes.
+ * - Clicking, tapping or pressing Space on the already-selected item deselects
+ *   it; native radios can't be unchecked, so this is added on top.
  * - All 3 items are added in ONE /cart/add.js request. Every line carries the
  *   same `_bundle_id` property (hidden from customers by the leading underscore)
  *   plus a visible `Bundle` property.
@@ -93,9 +95,15 @@
 			this.buttonLabel = this.querySelector( '[data-bundle-button-label]' );
 			this.defaultLabel = this.buttonLabel ? this.buttonLabel.textContent : '';
 			this.busy = false;
+			// Group fieldset -> radio that was checked before the current click.
+			this.lastChecked = new WeakMap();
 
+			this.onClick = this.onClick.bind( this );
+			this.onKeydown = this.onKeydown.bind( this );
 			this.onChange = this.onChange.bind( this );
 			this.onSubmit = this.onSubmit.bind( this );
+			this.form.addEventListener( 'click', this.onClick );
+			this.form.addEventListener( 'keydown', this.onKeydown );
 			this.form.addEventListener( 'change', this.onChange );
 			this.form.addEventListener( 'submit', this.onSubmit );
 
@@ -104,6 +112,8 @@
 
 		disconnectedCallback() {
 			if ( this.form ) {
+				this.form.removeEventListener( 'click', this.onClick );
+				this.form.removeEventListener( 'keydown', this.onKeydown );
 				this.form.removeEventListener( 'change', this.onChange );
 				this.form.removeEventListener( 'submit', this.onSubmit );
 			}
@@ -141,6 +151,47 @@
 		}
 
 		/**
+		 * Deselect on second click. A radio's `click` fires after it becomes checked
+		 * but before `change`, so lastChecked still holds the previous choice here.
+		 * Label clicks and arrow keys dispatch this click; arrow keys always move to
+		 * a different radio, so they never deselect. Space is handled in onKeydown().
+		 *
+		 * @param {MouseEvent} event Click event.
+		 */
+		onClick( event ) {
+			const radio = event.target.closest( '[data-bundle-option]' );
+			if ( ! radio || this.busy ) {
+				return;
+			}
+
+			const group = radio.closest( '[data-bundle-group]' );
+			if ( this.lastChecked.get( group ) === radio ) {
+				radio.checked = false;
+				this.lastChecked.delete( group );
+				this.clearMessages();
+				this.update();
+			}
+		}
+
+		/**
+		 * Keyboard deselect: Space on the already-selected radio clears it.
+		 * Browsers don't fire `click` for Space on a checked radio, so handle it here.
+		 *
+		 * @param {KeyboardEvent} event Keydown event.
+		 */
+		onKeydown( event ) {
+			const radio = event.target;
+			if ( event.key !== ' ' || this.busy || ! radio.matches( '[data-bundle-option]:checked' ) ) {
+				return;
+			}
+			event.preventDefault();
+			radio.checked = false;
+			this.lastChecked.delete( radio.closest( '[data-bundle-group]' ) );
+			this.clearMessages();
+			this.update();
+		}
+
+		/**
 		 * Variant change: update that card's price and select its product.
 		 * Any change: recalculate the total and status.
 		 *
@@ -157,6 +208,17 @@
 				setText( card.querySelector( '[data-card-price]' ), formatMoney( Number( option.dataset.price ) || 0, this.dataset.moneyFormat ) );
 				if ( radio && ! radio.disabled && ! radio.checked ) {
 					radio.checked = true;
+				}
+			}
+
+			// Remember each group's current choice for the deselect-on-second-click check.
+			const group = event.target.closest( '[data-bundle-group]' );
+			if ( group ) {
+				const checked = group.querySelector( '[data-bundle-option]:checked' );
+				if ( checked ) {
+					this.lastChecked.set( group, checked );
+				} else {
+					this.lastChecked.delete( group );
 				}
 			}
 

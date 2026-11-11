@@ -260,6 +260,12 @@
   opacity: 0.75;
 }
 
+.bundle-builder__hint {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
 .bundle-builder__total {
   display: flex;
   justify-content: space-between;

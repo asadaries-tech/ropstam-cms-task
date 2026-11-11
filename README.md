@@ -253,6 +253,7 @@ shopify theme push --unpublished --store YOUR-STORE.myshopify.com
 **Edge cases**
 
 - Sold-out products are disabled with a "Sold out" badge. Sold-out variants are disabled options. If a whole group is sold out, the customer is told why the bundle can't be completed.
+- Customers can deselect a choice by clicking, tapping or pressing Space on the selected item again (a hint tells them). Native radios can't be unchecked, so this is added in JS.
 - Submitting before all groups are chosen shows a message and moves focus to the first group that's missing a choice.
 - 422 responses show Shopify's own message (e.g. "You can only add 2 of this item to the cart"). Network errors and timeouts show a friendly fallback, and the button always recovers.
 - Groups with no collection or products are skipped on the storefront and flagged in the theme editor.
