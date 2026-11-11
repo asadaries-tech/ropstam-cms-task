@@ -8,7 +8,8 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Registers the sacalc_service post type and the base_price / delivery_time_days meta.
+ * Registers the sacalc_service post type, the base_price / delivery_time_days meta
+ * and the admin list-table columns.
  */
 class SACALC_Post_Type {
 
@@ -33,6 +34,8 @@ class SACALC_Post_Type {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_post_type' ) );
 		add_action( 'init', array( __CLASS__, 'register_meta' ) );
+		add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', array( __CLASS__, 'add_columns' ) );
+		add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', array( __CLASS__, 'render_column' ), 10, 2 );
 	}
 
 	/**
@@ -145,5 +148,40 @@ class SACALC_Post_Type {
 	public static function get_days( $post_id ) {
 		$raw = get_post_meta( $post_id, self::META_DAYS, true );
 		return ( '' === $raw || null === $raw ) ? null : self::sanitize_days( $raw );
+	}
+
+	/**
+	 * Add price/delivery columns to the admin list table.
+	 *
+	 * @param array $columns Existing columns.
+	 * @return array
+	 */
+	public static function add_columns( $columns ) {
+		$date = isset( $columns['date'] ) ? $columns['date'] : null;
+		unset( $columns['date'] );
+
+		$columns[ self::META_PRICE ] = __( 'Base price', 'service-addon-calculator' );
+		$columns[ self::META_DAYS ]  = __( 'Delivery', 'service-addon-calculator' );
+
+		if ( null !== $date ) {
+			$columns['date'] = $date;
+		}
+		return $columns;
+	}
+
+	/**
+	 * Output a custom column cell.
+	 *
+	 * @param string $column  Column key.
+	 * @param int    $post_id Post ID.
+	 */
+	public static function render_column( $column, $post_id ) {
+		if ( self::META_PRICE === $column ) {
+			$price = self::get_price( $post_id );
+			echo esc_html( null === $price ? '—' : SACALC_Renderer::format_money( $price ) );
+		} elseif ( self::META_DAYS === $column ) {
+			$days = self::get_days( $post_id );
+			echo esc_html( null === $days ? '—' : SACALC_Renderer::format_days( $days ) );
+		}
 	}
 }
